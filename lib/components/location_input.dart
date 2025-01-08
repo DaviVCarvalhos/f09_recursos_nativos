@@ -5,7 +5,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../screens/map_screen.dart';
 import '../utils/location_util.dart';
 
+// Adicionamos o parâmetro onSelectPlace para passar as coordenadas de volta.
 class LocationInput extends StatefulWidget {
+  final Function(double, double)
+      onSelectPlace; // Callback para enviar coordenadas
+
+  LocationInput({required this.onSelectPlace});
+
   @override
   _LocationInputState createState() => _LocationInputState();
 }
@@ -15,14 +21,16 @@ class _LocationInputState extends State<LocationInput> {
 
   Future<void> _getCurrentUserLocation() async {
     final locData =
-        await Location().getLocation(); //pega localização do usuário
+        await Location().getLocation(); // Pega localização do usuário
     print(locData.latitude);
     print(locData.longitude);
 
-    //CARREGANDO NO MAPA
-
+    // Atualizando a visualização do mapa com a localização do usuário
     final staticMapImageUrl = LocationUtil.generateLocationPreviewImage(
         latitude: locData.latitude!, longitude: locData.longitude!);
+
+    // Passando as coordenadas para o callback
+    widget.onSelectPlace(locData.latitude!, locData.longitude!);
 
     setState(() {
       _previewImageUrl = staticMapImageUrl;
@@ -40,9 +48,13 @@ class _LocationInputState extends State<LocationInput> {
     print(selectedPosition.latitude);
     print(selectedPosition.longitude);
 
+    // Atualizando a visualização do mapa com a localização selecionada
     final staticMapImageUrl = LocationUtil.generateLocationPreviewImage(
         latitude: selectedPosition.latitude,
         longitude: selectedPosition.longitude);
+
+    // Passando as coordenadas para o callback
+    widget.onSelectPlace(selectedPosition.latitude, selectedPosition.longitude);
 
     setState(() {
       _previewImageUrl = staticMapImageUrl;

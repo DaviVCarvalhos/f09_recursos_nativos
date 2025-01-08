@@ -36,6 +36,16 @@ class PlacesModel with ChangeNotifier {
       email: email,
     );
 
+    // Log para verificar as informações antes de salvar
+    print('Salvando novo lugar:');
+    print('Título: ${newPlace.title}');
+    print('Endereço: ${newPlace.location!.address}');
+    print('Latitude: ${newPlace.location!.latitude}');
+    print('Longitude: ${newPlace.location!.longitude}');
+    print('Telefone: ${newPlace.phoneNumber}');
+    print('Email: ${newPlace.email}');
+    print('Caminho da Imagem: ${newPlace.image.path}');
+
     _items.add(newPlace);
     DbUtil.insert('places', {
       'id': newPlace.id,

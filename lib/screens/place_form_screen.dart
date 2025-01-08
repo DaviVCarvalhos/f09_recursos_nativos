@@ -17,6 +17,14 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
   final _emailController = TextEditingController();
 
   File? _pickedImage;
+  double? _latitude;
+  double? _longitude;
+
+  // Callback para receber as coordenadas da localização
+  void _selectPlace(double lat, double lng) {
+    _latitude = lat;
+    _longitude = lng;
+  }
 
   void _selectImage(File pickedImage) {
     _pickedImage = pickedImage;
@@ -26,14 +34,17 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
     if (_titleController.text.isEmpty ||
         _pickedImage == null ||
         _phoneController.text.isEmpty ||
-        _emailController.text.isEmpty) {
+        _emailController.text.isEmpty ||
+        _latitude == null ||
+        _longitude == null) {
       return;
     }
+
     Provider.of<PlacesModel>(context, listen: false).addPlace(
         _titleController.text,
         _pickedImage!,
-        0.0, // Lat e Lng, você pode pegar esses valores com a localização
-        0.0, // Atualize conforme necessário
+        _latitude!,
+        _longitude!,
         _phoneController.text,
         _emailController.text);
 
@@ -82,7 +93,8 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
                     SizedBox(height: 10),
                     ImageInput(this._selectImage),
                     SizedBox(height: 10),
-                    LocationInput(),
+                    LocationInput(
+                        onSelectPlace: _selectPlace), // Passando o callback
                   ],
                 ),
               ),

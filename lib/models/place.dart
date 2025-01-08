@@ -7,15 +7,15 @@ class Place {
   final String title;
   final PlaceLocation? location;
   final File image;
-  final String phoneNumber; // Novo campo
-  final String email; // Novo campo
+  final String phoneNumber;
+  final String email;
 
   Place({
     required this.id,
     required this.title,
     this.location,
     required this.image,
-    required this.phoneNumber, // Inicializado
-    required this.email, // Inicializado
+    required this.phoneNumber,
+    required this.email,
   });
 }
