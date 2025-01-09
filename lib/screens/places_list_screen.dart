@@ -20,6 +20,14 @@ class PlacesListScreen extends StatelessWidget {
               Navigator.of(context).pushNamed(AppRoutes.PLACE_FORM);
             },
             icon: Icon(Icons.add, color: Colors.white),
+          ),
+          IconButton(
+            onPressed: () async {
+              // Aqui chamamos a sincronização de dados
+              await Provider.of<PlacesModel>(context, listen: false)
+                  .syncPlaces();
+            },
+            icon: Icon(Icons.sync, color: Colors.white),
           )
         ],
       ),
