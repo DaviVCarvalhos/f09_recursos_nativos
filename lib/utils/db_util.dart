@@ -67,4 +67,23 @@ class DbUtil {
     final db = await DbUtil.openDatabaseConnection();
     await db.delete(table);
   }
+
+  static Future<List<Map<String, dynamic>>> getLastTenItems(
+      String table) async {
+    final db = await DbUtil.openDatabaseConnection();
+    return db.query(
+      table,
+      orderBy: 'createdAt DESC',
+      limit: 10,
+    );
+  }
+
+  static Future<void> delete(String table, String id) async {
+    final db = await DbUtil.openDatabaseConnection();
+    await db.delete(
+      table,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

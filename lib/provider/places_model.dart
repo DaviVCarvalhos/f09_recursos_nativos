@@ -70,7 +70,7 @@ class PlacesModel with ChangeNotifier {
   }
 
   Future<void> loadPlaces() async {
-    final dataList = await DbUtil.getData('places');
+    final dataList = await DbUtil.getLastTenItems('places');
     _items = dataList
         .map(
           (item) => Place(
@@ -97,34 +97,60 @@ class PlacesModel with ChangeNotifier {
 
     if (!snapshot.exists) return;
 
-    final firebasePlaces =
-        (snapshot.value as Map).values.cast<Map<String, dynamic>>().toList();
-    final localPlaces = await DbUtil.getData('places');
+    // Verificar se snapshot.value é um Map
+    if (snapshot.value is Map) {
+      // Agora garantimos que é um Map<String, dynamic>
+      final firebasePlaces = (snapshot.value as Map<dynamic, dynamic>)
+          .map((key, value) {
+            // Convertendo chave para String e o valor para Map<String, dynamic>
+            return MapEntry(
+                key.toString(), Map<String, dynamic>.from(value as Map));
+          })
+          .values
+          .toList();
 
-    // Verifica e sincroniza os dados
-    for (final place in firebasePlaces) {
-      final localPlace = localPlaces.firstWhere(
-        (local) => local['id'] == place['id'],
-        orElse: () => <String, dynamic>{}, // Retorna um Map vazio
-      );
+      final localPlaces = await DbUtil.getData('places');
 
-      if (localPlace.isEmpty) {
-        // Adiciona ao SQLite caso não exista
-        await DbUtil.insert('places', {
-          'id': place['id'],
-          'title': place['title'],
-          'image': place['image'],
-          'latitude': place['latitude'],
-          'longitude': place['longitude'],
-          'address': place['address'],
-          'phoneNumber': place['phoneNumber'],
-          'email': place['email'],
-          'createdAt': place['createdAt'],
-        });
+      final firebasePlaceIds =
+          firebasePlaces.map((place) => place['id']).toList();
+
+      // Remover locais que não existem mais no Firebase
+      for (final localPlace in localPlaces) {
+        if (!firebasePlaceIds.contains(localPlace['id'])) {
+          // Excluir do SQLite se o lugar não estiver no Firebase
+          await DbUtil.delete('places', localPlace['id']);
+        }
       }
-    }
 
-    // Atualiza os lugares carregados no aplicativo
-    await loadPlaces();
+      // Verificar quais lugares precisam ser sincronizados ou inseridos
+      for (final place in firebasePlaces) {
+        final localPlace = localPlaces.firstWhere(
+          (local) => local['id'] == place['id'],
+          orElse: () =>
+              <String, dynamic>{}, // Retorna um Map vazio se não encontrar
+        );
+
+        if (localPlace.isEmpty) {
+          // Adiciona ao SQLite se o lugar não existir localmente
+          await DbUtil.insert('places', {
+            'id': place['id'],
+            'title': place['title'],
+            'image': place['image'],
+            'latitude': place['latitude'],
+            'longitude': place['longitude'],
+            'address': place['address'],
+            'phoneNumber': place['phoneNumber'],
+            'email': place['email'],
+            'createdAt': place['createdAt'],
+          });
+        }
+      }
+
+      // Atualiza a lista local no aplicativo
+      await loadPlaces();
+    } else {
+      // Se o snapshot não for um Map válido, pode-se adicionar um log de erro ou retornar um erro.
+      print('Erro: snapshot.value não é um Map');
+    }
   }
 }
