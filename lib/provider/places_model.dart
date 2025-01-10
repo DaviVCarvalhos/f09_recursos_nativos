@@ -153,4 +153,67 @@ class PlacesModel with ChangeNotifier {
       print('Erro: snapshot.value não é um Map');
     }
   }
+
+  void editPlace(String id, String newTitle, File newImage, double newLat,
+      double newLng, String newPhoneNumber, String newEmail) async {
+    final placeIndex = _items.indexWhere((place) => place.id == id);
+    if (placeIndex >= 0) {
+      final address = await LocationUtil.getAddressFromLatLng(newLat, newLng);
+
+      // Atualiza o lugar na memória
+      final updatedPlace = Place(
+        id: id,
+        title: newTitle,
+        image: newImage,
+        location: PlaceLocation(
+            latitude: newLat, longitude: newLng, address: address),
+        phoneNumber: newPhoneNumber,
+        email: newEmail,
+      );
+      _items[placeIndex] = updatedPlace;
+
+      // Atualiza no Firebase
+      final placesRef = FirebaseDatabase.instance.ref('places');
+      await placesRef.child(id).update({
+        'title': newTitle,
+        'image': newImage.path,
+        'latitude': newLat,
+        'longitude': newLng,
+        'address': address,
+        'phoneNumber': newPhoneNumber,
+        'email': newEmail,
+        'updatedAt': DateTime.now().toString(),
+      });
+
+      // Atualiza no SQLite
+      DbUtil.insert('places', {
+        'id': updatedPlace.id,
+        'title': updatedPlace.title,
+        'image': updatedPlace.image.path,
+        'latitude': updatedPlace.location!.latitude,
+        'longitude': updatedPlace.location!.longitude,
+        'address': updatedPlace.location!.address,
+        'phoneNumber': updatedPlace.phoneNumber,
+        'email': updatedPlace.email,
+        'createdAt': DateTime.now().toString(),
+      });
+
+      notifyListeners();
+    }
+  }
+
+  Future<void> removePlace(String id) async {
+    // Remove da memória
+    _items.removeWhere((place) => place.id == id);
+
+    // Remove do Firebase
+    final placesRef = FirebaseDatabase.instance.ref('places');
+    await placesRef.child(id).remove();
+
+    // Remove do SQLite
+    final db = await DbUtil.openDatabaseConnection();
+    await db.delete('places', where: 'id = ?', whereArgs: [id]);
+
+    notifyListeners();
+  }
 }

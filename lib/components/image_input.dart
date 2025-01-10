@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart' as syspaths;
 class ImageInput extends StatefulWidget {
   final Function onSelectImage;
 
-  ImageInput(this.onSelectImage);
+  ImageInput(this.onSelectImage, {File? initialImage});
 
   @override
   _ImageInputState createState() => _ImageInputState();
@@ -68,7 +68,7 @@ class _ImageInputState extends State<ImageInput> {
             label: Text('Tirar foto'),
             onPressed: _takePicture,
           ),
-        ),        
+        ),
       ],
     );
   }
