@@ -23,6 +23,14 @@ class PlacesListScreen extends StatelessWidget {
             },
             icon: Icon(Icons.add, color: Colors.white),
           ),
+          IconButton(
+            onPressed: () async {
+              // Sincronizar lugares
+              await Provider.of<PlacesModel>(context, listen: false)
+                  .syncPlaces();
+            },
+            icon: Icon(Icons.sync, color: Colors.white),
+          ),
         ],
       ),
       body: FutureBuilder(
