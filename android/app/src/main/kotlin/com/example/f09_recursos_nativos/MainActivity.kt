@@ -1,4 +1,4 @@
-package com.example.f09_recursos_nativos
+package com.miniprojv.app
 
 import io.flutter.embedding.android.FlutterActivity
 

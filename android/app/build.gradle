@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.f09_recursos_nativos"
+    namespace = "com.miniprojv.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
