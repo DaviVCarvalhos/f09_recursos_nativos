@@ -1,20 +1,19 @@
 import 'dart:io';
 
+import 'package:f09_recursos_nativos/components/image_input.dart';
+import 'package:f09_recursos_nativos/components/location_input.dart';
+import 'package:f09_recursos_nativos/provider/places_model.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
-import '../components/image_input.dart';
-import '../components/location_input.dart';
-import '../provider/places_model.dart';
+import 'package:provider/provider.dart';
 
 class PlaceFormScreen extends StatefulWidget {
-  final String? id;
-  final String? title;
-  final String? phoneNumber;
-  final String? email;
-  final LatLng? initialLocation;
-  final String? imagePath;
+  final String? id; // ID do local para edição
+  final String? title; // Título inicial
+  final String? phoneNumber; // Telefone inicial
+  final String? email; // E-mail inicial
+  final LatLng? initialLocation; // Localização inicial
+  final String? imagePath; // Caminho da imagem inicial
 
   PlaceFormScreen({
     this.id,
@@ -37,10 +36,13 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
   File? _pickedImage;
   double? _latitude;
   double? _longitude;
+  String? _address;
 
   @override
   void initState() {
     super.initState();
+
+    // Preenche os campos com valores iniciais se estiverem disponíveis
     if (widget.title != null) _titleController.text = widget.title!;
     if (widget.phoneNumber != null) _phoneController.text = widget.phoneNumber!;
     if (widget.email != null) _emailController.text = widget.email!;
@@ -53,30 +55,34 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
     }
   }
 
-  void _selectPlace(double lat, double lng) {
-    _latitude = lat;
-    _longitude = lng;
-  }
-
   void _selectImage(File pickedImage) {
     _pickedImage = pickedImage;
   }
 
-  void _submitForm() async {
+  void _selectPlace(double lat, double lng, String address) {
+    _latitude = lat;
+    _longitude = lng;
+    _address = address;
+
+    setState(() {});
+  }
+
+  void _selectPlaceWithAddress(double lat, double lng) {
+    _selectPlace(lat, lng, _address ?? ''); // Passa o endereço como parâmetro
+  }
+
+  void _submitForm() {
     if (_titleController.text.isEmpty ||
+        _pickedImage == null ||
         _phoneController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _latitude == null ||
-        _longitude == null ||
-        (_pickedImage == null && widget.id == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Por favor, preencha todos os campos!')),
-      );
+        _longitude == null) {
       return;
     }
 
     if (widget.id == null) {
-      // Adicionar novo lugar
+      // Adicionar novo local
       Provider.of<PlacesModel>(context, listen: false).addPlace(
         _titleController.text,
         _pickedImage!,
@@ -86,7 +92,7 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
         _emailController.text,
       );
     } else {
-      // Editar lugar existente
+      // Editar local existente
       Provider.of<PlacesModel>(context, listen: false).editPlace(
         widget.id!,
         _titleController.text,
@@ -132,33 +138,22 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
                       decoration: InputDecoration(labelText: 'E-mail'),
                     ),
                     SizedBox(height: 10),
-                    ImageInput(
-                      _selectImage,
-                      initialImage: _pickedImage,
-                    ),
+                    ImageInput(this._selectImage),
                     SizedBox(height: 10),
                     LocationInput(
-                      onSelectPlace: _selectPlace,
+                      onSelectPlace: _selectPlaceWithAddress,
                       initialLocation: widget.initialLocation,
+                      initialAddress: _address,
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton.icon(
-              icon: Icon(Icons.save),
-              label:
-                  Text(widget.id == null ? 'Adicionar' : 'Salvar Alterações'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                elevation: 0,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: _submitForm,
-            ),
+          ElevatedButton.icon(
+            icon: Icon(Icons.add),
+            label: Text(widget.id == null ? 'Adicionar' : 'Salvar'),
+            onPressed: _submitForm,
           ),
         ],
       ),

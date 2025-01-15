@@ -9,8 +9,13 @@ class LocationInput extends StatefulWidget {
   final Function(double, double)
       onSelectPlace; // Callback para enviar coordenadas
   final LatLng? initialLocation; // Localização inicial opcional
+  final String? initialAddress; // Endereço inicial opcional
 
-  LocationInput({required this.onSelectPlace, this.initialLocation});
+  LocationInput({
+    required this.onSelectPlace,
+    this.initialLocation,
+    this.initialAddress,
+  });
 
   @override
   _LocationInputState createState() => _LocationInputState();
@@ -18,29 +23,31 @@ class LocationInput extends StatefulWidget {
 
 class _LocationInputState extends State<LocationInput> {
   String? _previewImageUrl;
+  final TextEditingController _addressController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Se uma localização inicial foi fornecida, gera a imagem do mapa.
+    // Gera o preview do mapa caso haja localização inicial ou endereço inicial
     if (widget.initialLocation != null) {
       _previewImageUrl = LocationUtil.generateLocationPreviewImage(
         latitude: widget.initialLocation!.latitude,
         longitude: widget.initialLocation!.longitude,
       );
+    } else if (widget.initialAddress != null) {
+      _addressController.text = widget.initialAddress!;
+      _getCoordinatesFromAddress(widget.initialAddress!);
     }
   }
 
   Future<void> _getCurrentUserLocation() async {
     try {
-      final locData =
-          await Location().getLocation(); // Pega localização do usuário
+      final locData = await Location().getLocation();
       final staticMapImageUrl = LocationUtil.generateLocationPreviewImage(
         latitude: locData.latitude!,
         longitude: locData.longitude!,
       );
 
-      // Passando as coordenadas para o callback
       widget.onSelectPlace(locData.latitude!, locData.longitude!);
 
       setState(() {
@@ -48,6 +55,9 @@ class _LocationInputState extends State<LocationInput> {
       });
     } catch (error) {
       print("Erro ao obter localização: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao obter localização atual.')),
+      );
     }
   }
 
@@ -66,12 +76,37 @@ class _LocationInputState extends State<LocationInput> {
       longitude: selectedPosition.longitude,
     );
 
-    // Passando as coordenadas para o callback
     widget.onSelectPlace(selectedPosition.latitude, selectedPosition.longitude);
 
     setState(() {
       _previewImageUrl = staticMapImageUrl;
     });
+  }
+
+  Future<void> _getCoordinatesFromAddress(String address) async {
+    try {
+      final coordinates = await LocationUtil.getCoordinatesFromAddress(address);
+      final latitude = coordinates['latitude']!;
+      final longitude = coordinates['longitude']!;
+
+      final staticMapImageUrl = LocationUtil.generateLocationPreviewImage(
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+      widget.onSelectPlace(latitude, longitude);
+
+      setState(() {
+        _previewImageUrl = staticMapImageUrl;
+      });
+    } catch (error) {
+      print("Erro ao buscar coordenadas: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao buscar localização: $error'),
+        ),
+      );
+    }
   }
 
   @override
@@ -96,6 +131,31 @@ class _LocationInputState extends State<LocationInput> {
                   width: double.infinity,
                 ),
         ),
+        SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _addressController,
+                decoration: InputDecoration(
+                  labelText: 'Endereço',
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (value) {
+                  _getCoordinatesFromAddress(value);
+                },
+              ),
+            ),
+            SizedBox(width: 10),
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                _getCoordinatesFromAddress(_addressController.text);
+              },
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

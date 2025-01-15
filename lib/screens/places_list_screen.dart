@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:f09_recursos_nativos/provider/places_model.dart';
-import 'package:f09_recursos_nativos/screens/place_details_screen.dart';
-import 'package:f09_recursos_nativos/screens/place_form_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../provider/places_model.dart';
+import '../screens/place_details_screen.dart';
+import '../screens/place_form_screen.dart';
 import '../utils/app_routes.dart';
 
 class PlacesListScreen extends StatelessWidget {
@@ -39,7 +39,7 @@ class PlacesListScreen extends StatelessWidget {
                 ConnectionState.waiting
             ? Center(child: CircularProgressIndicator())
             : Consumer<PlacesModel>(
-                child: Center(child: Text('Nenhum local')),
+                child: Center(child: Text('Nenhum local encontrado')),
                 builder: (context, places, child) => places.itemsCount == 0
                     ? child!
                     : ListView.builder(
@@ -51,13 +51,14 @@ class PlacesListScreen extends StatelessWidget {
                               backgroundImage: FileImage(place.image),
                             ),
                             title: Text(place.title),
+                            subtitle: Text(
+                                'Telefone: ${place.phoneNumber}\nE-mail: ${place.email}'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
                                   icon: Icon(Icons.edit, color: Colors.blue),
                                   onPressed: () {
-                                    // Redireciona para a tela de edição, passando os dados individualmente
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (ctx) => PlaceFormScreen(
