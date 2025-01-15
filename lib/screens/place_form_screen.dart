@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors
-
 import 'dart:io';
 
 import 'package:f09_recursos_nativos/components/image_input.dart';
@@ -11,11 +9,11 @@ import 'package:provider/provider.dart';
 
 class PlaceFormScreen extends StatefulWidget {
   final String? id; // ID do local para edição
-  final String? title; // Título inicial
-  final String? phoneNumber; // Telefone inicial
-  final String? email; // E-mail inicial
-  final LatLng? initialLocation; // Localização inicial
-  final String? imagePath; // Caminho da imagem inicial
+  final String? title;
+  final String? phoneNumber;
+  final String? email;
+  final LatLng? initialLocation;
+  final String? imagePath;
 
   PlaceFormScreen({
     this.id,
@@ -141,6 +139,14 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
                     ),
                     SizedBox(height: 10),
                     ImageInput(this._selectImage),
+                    SizedBox(height: 10),
+                    if (_pickedImage != null)
+                      Image.file(
+                        _pickedImage!,
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.cover,
+                      ),
                     SizedBox(height: 10),
                     LocationInput(
                       onSelectPlace: _selectPlaceWithAddress,
