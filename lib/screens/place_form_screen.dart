@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:io';
 
 import 'package:f09_recursos_nativos/components/image_input.dart';
@@ -154,6 +156,8 @@ class _PlaceFormScreenState extends State<PlaceFormScreen> {
             icon: Icon(Icons.add),
             label: Text(widget.id == null ? 'Adicionar' : 'Salvar'),
             onPressed: _submitForm,
+            style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.all(Colors.amber)),
           ),
         ],
       ),

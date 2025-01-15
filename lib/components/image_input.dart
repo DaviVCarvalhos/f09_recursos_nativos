@@ -1,73 +1,85 @@
 import 'dart:io';
-
-import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart' as syspaths;
+import 'package:flutter/material.dart';
 
 class ImageInput extends StatefulWidget {
-  final Function onSelectImage;
+  final Function(File) onImagePicked;
 
-  ImageInput(this.onSelectImage, {File? initialImage});
+  ImageInput(this.onImagePicked);
 
   @override
   _ImageInputState createState() => _ImageInputState();
 }
 
 class _ImageInputState extends State<ImageInput> {
-  //Capturando Imagem
-  File? _storedImage;
+  File? _pickedImage;
 
-  _takePicture() async {
-    final ImagePicker _picker = ImagePicker();
-    XFile imageFile = await _picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 600,
-    ) as XFile;
+  final ImagePicker _picker = ImagePicker();
 
-    if (imageFile == null) return;
-
-    setState(() {
-      _storedImage = File(imageFile.path);
-    });
-
-    //pegar pasta que posso salvar documentos
-    final appDir = await syspaths.getApplicationDocumentsDirectory();
-    String fileName = path.basename(_storedImage!.path);
-    final savedImage = await _storedImage!.copy(
-      '${appDir.path}/$fileName',
+  Future<void> _pickImage() async {
+    final pickedFile = await showDialog<File>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Escolha a origem da imagem'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              onPressed: () async {
+                final image = await _picker.pickImage(
+                  source: ImageSource.camera,
+                  maxWidth: 600,
+                );
+                Navigator.of(ctx)
+                    .pop(image?.path != null ? File(image!.path) : null);
+              },
+              child: Text('Tirar foto com a câmera'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final image = await _picker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 600,
+                );
+                Navigator.of(ctx)
+                    .pop(image?.path != null ? File(image!.path) : null);
+              },
+              child: Text('Escolher imagem da galeria'),
+            ),
+          ],
+        ),
+      ),
     );
-    widget.onSelectImage(savedImage);
+
+    if (pickedFile != null) {
+      setState(() {
+        _pickedImage = pickedFile;
+      });
+      widget.onImagePicked(_pickedImage!);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Container(
-          width: 180,
-          height: 100,
-          decoration: BoxDecoration(
-            border: Border.all(width: 1, color: Colors.grey),
-          ),
-          alignment: Alignment.center,
-          //child: Text('Nenhuma imagem!'),
-          //verificar se tem imagem
-          child: _storedImage != null
-              ? Image.file(
-                  _storedImage!,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                )
-              : Text('Nenhuma Imagem!'),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: TextButton.icon(
-            icon: Icon(Icons.camera),
-            label: Text('Tirar foto'),
-            onPressed: _takePicture,
-          ),
+        _pickedImage == null
+            ? Text('Nenhuma imagem selecionada!')
+            : Image.file(
+                _pickedImage!,
+                width: 150,
+                height: 150,
+                fit: BoxFit.cover,
+              ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              icon: Icon(Icons.camera_alt),
+              label: Text('Tirar Foto'),
+              onPressed: _pickImage,
+            ),
+          ],
         ),
       ],
     );
